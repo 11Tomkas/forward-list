@@ -1,115 +1,115 @@
 #include "forward_list.hpp"
 
-template <typename Type>
-Forward_list<Type>::Forward_list()
-    : m_pHead{ nullptr }
-    , m_pTail{ nullptr }
+#include <iostream>
+
+template <typename T>
+struct ForwardList<T>::Node
 {
-}
-
-template <typename Type>
-Forward_list<Type>::Forward_list(size_type count)
-    : m_pHead{ nullptr }
-    , m_pTail{ nullptr }
-{
-    if (count == 0)
-        return;
-
-    m_pHead = new Node{ value_type{}, nullptr };
-
-    Node* pNode{ m_pHead };
-
-    for (size_type c{ 1 }; c < count; ++c)
+    Node(value_type _value, Node* _pNext)
+        : value{ _value }
+        , pNext{ _pNext }
     {
-        pNode->pNext = new Node{ value_type{}, nullptr };
-        pNode = pNode->pNext;
+        std::cout << "Node(value_type, Node*)\n";
     }
-    m_pTail = pNode;
+    ~Node()
+    {
+        std::cout << "~Node()\n";
+    }
+    value_type value;
+    Node* pNext;
+};
+
+template <typename T>
+ForwardList<T>::ForwardList()
+    : m_pHead{ nullptr }
+{
 }
 
-template <typename Type>
-Forward_list<Type>::Forward_list(size_type count, const_reference value)
+template <typename T>
+ForwardList<T>::ForwardList(size_type count)
+    : ForwardList(count, value_type{})
+{
+}
+
+template <typename T>
+ForwardList<T>::ForwardList(size_type count, const_reference value)
     : m_pHead{ nullptr }
-    , m_pTail{ nullptr }
 {
     if (count == 0)
         return;
 
     m_pHead = new Node{ value, nullptr };
+    --count;
 
-    Node* pNode{ m_pHead };
+    Node* pHead{ m_pHead };
 
-    for (size_type c{ 1 }; c < count; ++c)
+    for (size_type c{ 0 }; c < count; ++c)
     {
-        pNode->pNext = new Node{ value, nullptr };
-        pNode = pNode->pNext;
+        pHead->pNext = new Node{ value, nullptr };
+        pHead = pHead->pNext;
     }
-    m_pTail = pNode;
 }
 
-template <typename Type>
-template <typename Iter>
-Forward_list<Type>::Forward_list(Iter first, Iter last)
+template <typename T>
+template <typename InputIt>
+ForwardList<T>::ForwardList(InputIt first, InputIt last)
     : m_pHead{ nullptr }
-    , m_pTail{ nullptr }
 {
-    if ((last - first) == 0)
+    size_type count{ 0 };
+
+    for (InputIt it{ first }; it != last; ++it)
+        ++count;
+
+    if (count == 0)
         return;
 
     m_pHead = new Node{ *first, nullptr };
     ++first;
 
-    Node* pNode{ m_pHead };
+    Node* pHead{ m_pHead };
 
     for (; first != last; ++first)
     {
-        pNode->pNext = new Node{ *first, nullptr };
-        pNode = pNode->pNext;
+        pHead->pNext = new Node{ *first, nullptr };
+        pHead = pHead->pNext;
     }
-    m_pTail = pNode;
 }
 
-template <typename Type>
-Forward_list<Type>::Forward_list(const Forward_list& other)
+template <typename T>
+ForwardList<T>::ForwardList(const ForwardList& other)
     : m_pHead{ nullptr }
-    , m_pTail{ nullptr }
 {
-    if (other.m_pHead == nullptr)
+    if (other.empty())
         return;
 
-    Node* pOtherNode{ other.m_pHead };
+    Node* pOtherHead{ other.m_pHead };
 
-    m_pHead = new Node{ pOtherNode->value, nullptr };
-    pOtherNode = pOtherNode->pNext;
+    m_pHead = new Node{ pOtherHead->value, nullptr };
+    pOtherHead = pOtherHead->pNext;
 
-    Node* pNode{ m_pHead };
+    Node* pHead{ m_pHead };
 
-    for (; pOtherNode != nullptr; pOtherNode = pOtherNode->pNext)
+    for (; pOtherHead != nullptr; pOtherHead = pOtherHead->pNext)
     {
-        pNode->pNext = new Node{ pOtherNode->value, nullptr };
-        pNode = pNode->pNext;
+        pHead->pNext = new Node{ pOtherHead->value, nullptr };
+        pHead = pHead->pNext;
     }
-    m_pTail = pNode;
 }
 
-template <typename Type>
-Forward_list<Type>::Forward_list(Forward_list&& other)
+template <typename T>
+ForwardList<T>::ForwardList(ForwardList&& other)
     : m_pHead{ nullptr }
-    , m_pTail{ nullptr }
 {
-    if (other.m_pHead == nullptr)
+    if (other.empty())
         return;
 
     m_pHead = other.m_pHead;
-    m_pTail = other.m_pTail;
     other.m_pHead = nullptr;
-    other.m_pTail = nullptr;
 }
 
-template <typename Type>
-Forward_list<Type>::Forward_list(std::initializer_list<value_type> init)
+template <typename T>
+ForwardList<T>::ForwardList(std::initializer_list<value_type> init)
     : m_pHead{ nullptr }
-    , m_pTail{ nullptr }
 {
     if (init.size() == 0)
         return;
@@ -119,25 +119,169 @@ Forward_list<Type>::Forward_list(std::initializer_list<value_type> init)
     m_pHead = new Node{ *iter, nullptr };
     ++iter;
 
-    Node* pNode{ m_pHead };
+    Node* pHead{ m_pHead };
 
     for (; iter != init.end(); ++iter)
     {
-        pNode->pNext = new Node{ *iter, nullptr };
-        pNode = pNode->pNext;
+        pHead->pNext = new Node{ *iter, nullptr };
+        pHead = pHead->pNext;
     }
-    m_pTail = pNode;
 }
 
-template <typename Type>
-Forward_list<Type>::~Forward_list()
+template <typename T>
+ForwardList<T>::~ForwardList()
 {
-    Node* pNode;
-
-    while (m_pHead != nullptr)
+    while (!empty())
     {
-        pNode = m_pHead;
+        Node* pNode{ m_pHead };
+
         m_pHead = m_pHead->pNext;
         delete pNode;
     }
+    std::cout.put('\n');
+}
+
+template <typename T>
+ForwardList<T>& ForwardList<T>::operator=(const ForwardList& other)
+{
+    if (this == &other)
+        return *this;
+
+    if (other.empty())
+        return *this;
+
+    if (m_pHead == nullptr)
+        m_pHead = new Node{ other.m_pHead->value, nullptr };
+    else
+    if (m_pHead != nullptr)
+        m_pHead->value = other.m_pHead->value;
+
+    Node* pHead{ m_pHead };
+    Node* pOtherHead{ other.m_pHead };
+
+    pOtherHead = pOtherHead->pNext;
+
+    for (; pOtherHead != nullptr; pOtherHead = pOtherHead->pNext)
+    {
+        if (pHead->pNext == nullptr)
+        {
+            pHead->pNext = new Node{ pOtherHead->value, nullptr };
+            pHead = pHead->pNext;
+        }
+        else
+        if (pHead->pNext != nullptr)
+        {
+            pHead = pHead->pNext;
+            pHead->value = pOtherHead->value;
+        }
+    }
+
+    Node* pTail{ pHead };
+
+    pHead = pHead->pNext;
+
+    while (pHead != nullptr)
+    {
+        Node* pNode{ pHead };
+
+        pHead = pHead->pNext;
+        delete pNode;
+    }
+
+    pTail->pNext = nullptr;
+
+    return *this;
+}
+
+template <typename T>
+ForwardList<T>& ForwardList<T>::operator=(ForwardList&& other)
+{
+    if (this == &other)
+        return *this;
+
+    if (other.empty())
+        return *this;
+
+    Node* pTmpNode{ m_pHead };
+
+    m_pHead = other.m_pHead;
+    other.m_pHead = pTmpNode;
+
+    return *this;
+}
+
+template <typename T>
+ForwardList<T>& ForwardList<T>::operator=(std::initializer_list<value_type> ilist)
+{
+    if (ilist.size() == 0)
+        return *this;
+
+    typename std::initializer_list<value_type>::const_iterator iter{ ilist.begin() };
+
+    if (m_pHead == nullptr)
+        m_pHead = new Node{ *iter, nullptr };
+    else
+    if (m_pHead != nullptr)
+        m_pHead->value = *iter;
+
+    Node* pHead{ m_pHead };
+
+    ++iter;
+
+    for (; iter != ilist.end(); ++iter)
+    {
+        if (pHead->pNext == nullptr)
+        {
+            pHead->pNext = new Node{ *iter, nullptr };
+            pHead = pHead->pNext;
+        }
+        else
+        if (pHead->pNext != nullptr)
+        {
+            pHead = pHead->pNext;
+            pHead->value = *iter;
+        }
+    }
+
+    Node* pTail{ pHead };
+
+    pHead = pHead->pNext;
+
+    while (pHead != nullptr)
+    {
+        Node* pNode{ pHead };
+
+        pHead = pHead->pNext;
+        delete pNode;
+    }
+
+    pTail->pNext = nullptr;
+
+    return *this;
+}
+
+template <typename T>
+bool ForwardList<T>::empty() const
+{
+    return m_pHead == nullptr;
+}
+
+template <typename T>
+void ForwardList<T>::print() const
+{
+    if (empty())
+    {
+        std::cout << "empty\n";
+
+        return;
+    }
+
+    Node* pHead{ m_pHead };
+
+    while (pHead != nullptr)
+    {
+        std::cout << pHead->value << ' ';
+        pHead = pHead->pNext;
+    }
+    std::cout.put('\n');
 }
